@@ -13,7 +13,7 @@ public:
   using out_t = std::vector<out_elem_t>;
   using out_const_iterator_t = out_t::const_iterator;
   mapper(std::string fname, long offset, long blocksize);
-  void domap();
+  void doit();
   void start_parallel();
   void join();
   [[nodiscard]] size_t osize() const;
@@ -35,13 +35,26 @@ public:
   using in_elem_t = std::string;
   using in_cont_t = std::vector<in_elem_t>;
   using in_inserter_t = std::back_insert_iterator<in_cont_t>;
+  using in_const_iterator_t = in_cont_t::const_iterator;
+
+  explicit reducer(std::string fname);
+  void doit();
+  void start_parallel();
+  void join();
 
   in_inserter_t backinserter() {
     return std::back_insert_iterator<in_cont_t>(m_in);
   }
-
+  in_const_iterator_t in_cbegin() {
+    return m_in.cbegin();
+  }
+  in_const_iterator_t in_cend() {
+    return m_in.cend();
+  }
 private:
+  std::string m_fname;
   in_cont_t m_in;
+  std::thread m_th;
 };
 
 
