@@ -21,7 +21,7 @@ endif()
 
 configure_file(version.h.in version.h)
 
-add_executable(mapreduce main.cpp mapreduce.cpp mapfileloader.cpp)
+add_executable(mapreduce main.cpp minprefix.cpp mapreduce.cpp mapfileloader.cpp)
 
 target_link_libraries(mapreduce Boost::filesystem)
 
@@ -38,7 +38,9 @@ if(WITH_TEST)
     find_package(GTest REQUIRED)
     enable_testing()
 
-    add_executable(gtest_mapreduce gtest_mapreduce.cpp mapreduce.cpp mapfileloader.cpp)
+    configure_file(generated-emails-10000.txt . COPYONLY)
+
+    add_executable(gtest_mapreduce gtest_mapreduce.cpp minprefix.cpp mapreduce.cpp mapfileloader.cpp)
 
     set_target_properties(gtest_mapreduce PROPERTIES
         CXX_STANDARD 20
