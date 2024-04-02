@@ -157,7 +157,7 @@ int main(int argc, char const * argv[])
 
     MapFileLoader fl(fname, mapn);
 
-      // load file in several streams
+      // load specified block from file
     auto loader = [ &fl ](int blocknumber, mapper::inserter_t iit) { fl.load(blocknumber, iit); };
 
       // convert everything to uppercase
