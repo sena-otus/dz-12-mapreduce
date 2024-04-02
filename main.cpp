@@ -92,7 +92,7 @@ void maxprefixreducer(int idx, reducer::const_iterator_t cbegin, reducer::const_
     auto curprefix  = std::string_view(curstr .data(), curprefixlen);
     if(prevprefix != curprefix) {
       prevstr = curstr;
-      break;
+      continue;
     }
     auto oldprefixlen = curprefixlen;
     do
@@ -112,11 +112,11 @@ void maxprefixreducer(int idx, reducer::const_iterator_t cbegin, reducer::const_
         break;
       }
     } while(curstr[curprefixlen-1] == prevstr[curprefixlen-1]);
-      // if(oldprefixlen != curprefixlen)
-      // {
-      //   std::cout << "new prefixlen " << curprefixlen << " prev: " << oldprevstr << " cur : " << curstr
-      //             << "\n";
-      // }
+    if(oldprefixlen != curprefixlen)
+    {
+      std::cout << "new prefixlen " << curprefixlen << " prev: " << oldprevstr << " cur : " << curstr
+                << "\n";
+    }
   }
   std::cout << "curprefixlen: " << curprefixlen << "\n";
 };
