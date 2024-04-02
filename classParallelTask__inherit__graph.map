@@ -1,0 +1,7 @@
+<map id="ParallelTask" name="ParallelTask">
+<area shape="rect" id="Node000001" title=" " alt="" coords="35,5,128,31"/>
+<area shape="rect" id="Node000002" href="$classmapper.html" title="map stage" alt="" coords="5,79,70,105"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="68,46,47,80,43,77,64,43"/>
+<area shape="rect" id="Node000003" href="$classreducer.html" title="reduce stage" alt="" coords="93,79,158,105"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="99,43,120,77,116,80,95,46"/>
+</map>
