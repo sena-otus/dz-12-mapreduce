@@ -58,13 +58,7 @@ mapreduce::run()
   for(auto && red : m_reds) {
     ribegin.emplace_back(red.backinserter());
   }
-  m_shuffler(size(), mbegin, mend, ribegin);
-
-    // for(auto && red : m_reds) {
-    //   for(auto it = red.in_cbegin(); it != red.in_cend(); ++it) {
-    //     std::cout << *it << "\n";
-    //   }
-    // }
+  m_shuffler(mapsize(), mbegin, mend, ribegin);
 
   // reduce
   for(auto && red : m_reds) {
@@ -76,12 +70,12 @@ mapreduce::run()
 
 }
 
-size_t mapreduce::size() const
+size_t mapreduce::mapsize() const
 {
   unsigned sumsize{0};
   for(auto && mapper: m_maps)
   {
-    sumsize += mapper.osize();
+    sumsize += mapper.size();
   }
   return sumsize;
 }

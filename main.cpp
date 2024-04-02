@@ -25,7 +25,13 @@ const int generic_errorcode = 1;
 const unsigned maxmapn = 128;
 const unsigned maxredn = 128;
 
-
+/**
+ *  shuffle rezults from mapper into reducer containers
+ *  @param insize whole amount of input lines (calculated on mapper stage)
+ *  @param inbegin array of begin mapper iterators (there must be mapn iterators)
+ *  @param inbegin array of end mapper iterators (there must be mapn iterators)
+ *  @param outbegin array of reducer container iterators (there must be redn iterators)
+ *  */
 void shuffle(
   const size_t insize,
   const std::vector<mapper::const_iterator_t> &inbegin,
@@ -35,6 +41,7 @@ void shuffle(
   auto incur = inbegin;
   const auto mapn = inbegin.size();
   const auto redn = outbegin.size();
+    // insert from all containers into heads and get maximum
   std::priority_queue<std::pair<mapper::value_t, unsigned>,
                       std::vector<std::pair<mapper::value_t,unsigned>>,
                       std::greater<>> heads;
@@ -75,6 +82,13 @@ void shuffle(
 }
 
 
+/**
+ *  @brief Iterate over elements and calculate the lenght of minimum unique prefix.
+ *  Duplicates are ignored.
+ *  @param idx reducer number
+ *  @param cbegin begin iterator of the reducer conainer
+ *  @param cend end iterator of the reducer conainer
+ *  */
 void maxprefixreducer(int idx, reducer::const_iterator_t cbegin, reducer::const_iterator_t cend) {
   std::ofstream ofs("rezult_"+std::to_string(idx), std::ios_base::out|std::ios::binary|std::ios::trunc);
   if(!ofs.is_open()) return;
@@ -94,8 +108,7 @@ void maxprefixreducer(int idx, reducer::const_iterator_t cbegin, reducer::const_
       continue;
     }
     auto oldprefixlen = curprefixlen;
-    do
-    {
+    do {
       curprefixlen++;
       const bool curstr_tooshort  = curprefixlen > curstr .length();
       const bool prevstr_tooshort = curprefixlen > prevstr.length();
@@ -144,10 +157,13 @@ int main(int argc, char const * argv[])
 
     MapFileLoader fl(fname, mapn);
 
+      // load file in several streams
     auto loader = [ &fl ](int blocknumber, mapper::inserter_t iit) { fl.load(blocknumber, iit); };
 
+      // convert everything to uppercase
     auto action = [](mapper::value_t&str) { boost::to_upper(str);};
 
+      // sort items in ascending order
     auto sorter = [](mapper::iterator_t begin, mapper::iterator_t end) { std::sort(begin, end);};
 
 
@@ -157,7 +173,7 @@ int main(int argc, char const * argv[])
        redn, maxprefixreducer};
     mr.run();
 
-      // smallest prefixes are in redn rezult_* files, wir should get the largest
+      // smallest prefixes are now in redn rezult_* files, wir should get the largest
     unsigned minprefix = 0;
     for(unsigned ii = 0; ii < redn; ii++) {
       const std::string rfname = "rezult_"+std::to_string(ii);

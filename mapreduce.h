@@ -1,29 +1,15 @@
 #pragma once
 
+#include "paralleltask.h"
 #include <functional>
 #include <iterator>
 #include <list>
 #include <string>
-#include <thread>
 #include <vector>
 
-class ParallelTask {
-public:
-  ParallelTask() = default;
-  ParallelTask(ParallelTask &&other) = default;
-  ParallelTask(const ParallelTask &other) = delete;
-  ParallelTask &operator=(ParallelTask &&other) = default;
-  ParallelTask &operator=(const ParallelTask &other) = delete;
-  virtual ~ParallelTask() = default;
-  virtual void doit() = 0;
-
-  void start_parallel() { m_th = std::thread(&ParallelTask::doit, this); }
-  void join() { m_th.join(); }
-
-private:
-  std::thread m_th;
-};
-
+/**
+ *  @brief map stage
+ *  */
 class mapper : public ParallelTask {
 public:
   using value_t = std::string;
@@ -35,6 +21,12 @@ public:
   using action_t = std::function<void(value_t &)>;
   using sorter_t = std::function<void(iterator_t, iterator_t)>;
 
+    /**
+     *  @param idx mapper number
+     *  @param loader should load mapper containers
+     *  @param action can modify loaded values (can be nullptr)
+     *  @param sorter sorts mapper conainer (can be nullptr)
+     *  */
   explicit mapper(int idx, loader_t &loader, action_t &action, sorter_t &sorter)
     : m_idx(idx), m_loader(loader), m_action(action), m_sorter(sorter) {}
 
@@ -44,7 +36,7 @@ public:
     if(m_sorter) m_sorter(begin(), end());
   }
 
-  [[nodiscard]] size_t osize() const { return m_data.size(); }
+  [[nodiscard]] size_t size() const { return m_data.size(); }
   [[nodiscard]] inserter_t backinserter() { return std::back_insert_iterator<data_t>(m_data); }
   [[nodiscard]] iterator_t begin() { return m_data.begin(); }
   [[nodiscard]] iterator_t end  () { return m_data.end(); }
@@ -59,6 +51,7 @@ private:
   sorter_t m_sorter;
 };
 
+/** @brief reduce stage */
 class reducer : public ParallelTask {
 public:
   using value_t = std::string;
@@ -67,6 +60,10 @@ public:
   using const_iterator_t = data_t::const_iterator;
   using payload_t = std::function<void(int, const_iterator_t, const_iterator_t)>;
 
+    /**
+     *  @param idx reducer number
+     *  @param pl useful payload should process container and create output files
+     *  */
   explicit reducer(int idx, payload_t &pl);
   void doit() override { m_pl(m_idx, m_data.cbegin(), m_data.cend()); }
 
@@ -82,17 +79,39 @@ private:
   data_t m_data;
 };
 
+/**
+ *  @brief map-reduce framework
+ *  */
 class mapreduce {
 public:
+  /**
+   *  @brief should shuffle rezults from mapper into reducer containers
+   *  - whole amount of input lines (calculated on mapper stage)
+   *  - array of begin mapper iterators (there must be mapn iterators)
+   *  - array of end mapper iterators (there must be mapn iterators)
+   *  - array of reducer container iterators (there must be redn iterators)
+   *  */
   using shuffler_t = std::function<void(size_t,
     const std::vector<mapper::const_iterator_t> &,
     const std::vector<mapper::const_iterator_t> &,
     const std::vector<reducer::inserter_t> &)>;
 
+    /**
+     *  @brief ctor setup all customizers
+     *  @param mapn amount of mapper threads
+     *  @param maploader should load mapper containers
+     *  @param mapaction modify loaded values (can be nullptr)
+     *  @param mapsorter sorts mapper conainer (can be nullptr)
+     *  @param shuffler moves items from mapper to reducer containers
+     *  @param redn amount of reducer threads
+     *  @param rpl reducer payload, should also create output files
+     *  */
   mapreduce(unsigned mapn, mapper::loader_t maploader, mapper::action_t mapaction, mapper::sorter_t mapsorter,
             shuffler_t shuffler,
             unsigned redn, reducer::payload_t rpl);
-  [[nodiscard]] size_t size() const;
+    /** size of all mapper containers */
+  [[nodiscard]] size_t mapsize() const;
+    /** run map-reduce */
   void run();
 
 private:
