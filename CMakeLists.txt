@@ -9,7 +9,7 @@ project(mapreduce VERSION ${PROJECT_VERSION})
 option(WITH_TEST "Whether to build Google test" ON)
 option(WITH_CLANG_TIDY "use clang-tidy" OFF)
 
-find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -21,9 +21,9 @@ endif()
 
 configure_file(version.h.in version.h)
 
-add_executable(mapreduce main.cpp mapreduce.cpp)
+add_executable(mapreduce main.cpp mapreduce.cpp mapfileloader.cpp)
 
-target_link_libraries(mapreduce Boost::filesystem Boost::program_options)
+target_link_libraries(mapreduce Boost::filesystem)
 
 set_target_properties(mapreduce PROPERTIES
     CXX_STANDARD 20
@@ -38,7 +38,7 @@ if(WITH_TEST)
     find_package(GTest REQUIRED)
     enable_testing()
 
-    add_executable(gtest_mapreduce gtest_mapreduce.cpp mapreduce.cpp)
+    add_executable(gtest_mapreduce gtest_mapreduce.cpp mapreduce.cpp mapfileloader.cpp)
 
     set_target_properties(gtest_mapreduce PROPERTIES
         CXX_STANDARD 20
