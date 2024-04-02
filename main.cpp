@@ -50,7 +50,6 @@ void shuffle(
   auto outcur = outbegin;
   unsigned curoutblock = 0;
   unsigned long curoutsize = 0;
-//  char prev_first_char = 0;
   while(!heads.empty()) {
     auto const &topval = heads.top();
     *(outcur[curoutblock]) = topval.first;
@@ -77,7 +76,7 @@ void shuffle(
 
 
 void maxprefixreducer(int idx, reducer::const_iterator_t cbegin, reducer::const_iterator_t cend) {
-  std::ofstream ofs("rezult_"+std::to_string(idx), std::ios_base::out|std::ios::binary);
+  std::ofstream ofs("rezult_"+std::to_string(idx), std::ios_base::out|std::ios::binary|std::ios::trunc);
   if(!ofs.is_open()) return;
   std::string prevstr;
   unsigned curprefixlen = 0;
@@ -112,17 +111,15 @@ void maxprefixreducer(int idx, reducer::const_iterator_t cbegin, reducer::const_
         break;
       }
     } while(curstr[curprefixlen-1] == prevstr[curprefixlen-1]);
-    if(oldprefixlen != curprefixlen)
-    {
-      std::cout << "new prefixlen " << curprefixlen << " prev: " << oldprevstr << " cur : " << curstr
-                << "\n";
-    }
+    // if(oldprefixlen != curprefixlen) {
+    //   std::cout << "new prefixlen " << curprefixlen << " prev: " << oldprevstr << " cur : " << curstr  << "\n";
+    // }
   }
-  std::cout << "curprefixlen: " << curprefixlen << "\n";
+  ofs << curprefixlen << "\n";
 };
 
 
-  // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err34-c)
 int main(int argc, char const * argv[])
 {
   try
@@ -159,6 +156,21 @@ int main(int argc, char const * argv[])
        shuffle,
        redn, maxprefixreducer};
     mr.run();
+
+      // smallest prefixes are in redn rezult_* files, wir should get the largest
+    unsigned minprefix = 0;
+    for(unsigned ii = 0; ii < redn; ii++) {
+      const std::string rfname = "rezult_"+std::to_string(ii);
+      std::ifstream ifs(rfname, std::ios_base::in|std::ios::binary);
+      if(!ifs.is_open()) throw std::logic_error("can not open " + rfname);
+      unsigned prefix = 0;
+      ifs >> prefix;
+      if(ifs.bad()) throw std::logic_error("garbage in " + rfname);
+      if(prefix > minprefix) {
+        minprefix = prefix;
+      }
+    }
+    std::cout << "Smallest unique prefix: " << minprefix << "\n";
   }
   catch(const std::exception &e)
   {
@@ -167,4 +179,4 @@ int main(int argc, char const * argv[])
   }
   return 0;
 }
-  // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err34-c)
